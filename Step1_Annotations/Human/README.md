@@ -6,7 +6,7 @@ The scripts:
 
 1. humangencodestep1.py: Extracts the annotated human lncRNAs and PCGs from the GENCODE v49 GTF file and groups transcript isoforms into gene-level genomic blocks. Identifies neighbouring upstream and downstream PCGs.
 
-2. Human_PCG_anchorssxript.py: Used to extract PCG blocks from the output of humangencodestep1.py and creates Human_PCG_Blocks.bed files used in BLASTN analysis
+2. Human_PCG_anchorsscript.py: Used to extract PCG blocks from the output of humangencodestep1.py and creates Human_PCG_Blocks.bed files used in BLASTN analysis
 
 3. Merged_Human_lncRNA_andAnchors.py: Combines the human lncRNA genomic coordinates with PCGs upstream and downstream (its anchors) to generate Human_lncRNA_Full_Anchor_Table.tsv used in synteny-based conservation analysis.
 
