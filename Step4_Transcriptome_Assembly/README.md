@@ -18,6 +18,14 @@ The scripts:
 
 7. finalannotatedlncblocksGorilla.py: used to process the expanded Gorilla lncRNA annotations and create gene-level lncRNA blocks (reference annotated and StringTie identified) for synteny-based reassessment
 
+8. RNASeqSynteny.py: used to repeat the human-chimpanzee synteny based conservation analysis on the expanded lncRNA catalogues to identify additional conserved human lncRNA candidates
+
+9. GorRNASeqSynteny.py: used to repeat the human-gorilla synteny based conservation analysis on the expanded lncRNA catalogues to identify additional conserved human lncRNA candidates
+
+10. calcfinalconservedlncschimp.py: used to create the final set of conserved human lncRNA candidates identified from the updated chimpanzee synteny-based conservation analysis
+
+11. calcfinalconservedlncsgorilla.py: used to create the final set of conserved human lncRNA candidates identified from the updated Gorilla synteny-based conservation analysis
+
 Input files: Chimpanzee and Gorilla reference genome annotations (Ensembl release 116), newly assembled StringTie transcriptomes for Chimpanzee and Gorilla, results from CPC2 and FEELnc coding-potential analysis.
 
 Important to note: These scripts represent only a fraction of the processing of the newly assembled transcriptomes. The initial RNA-seq alignment and transcriptome assembly were performed using HISAT2 and StringTie, while gffcomapre was used to compare reconstructed transcripts against the corresponding reference annotations. Full methodology can be followed in Section 2.5 of the Materials and Methodology section.  
