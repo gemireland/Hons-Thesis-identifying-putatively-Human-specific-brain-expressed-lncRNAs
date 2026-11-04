@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #EXPLANATION OF THE SCRIPT 
-#this script reads in the tab-delimited BLAST output (.tsv) that was in the format :
+#this script reads in the tab-delimited BLAST output (.tsv) that was in the format as stipulated in our BLASTN parameters:
 # -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
 
 #The output showed that a single human PCG often aligned to the several different mouse PCGs so we need to select which alignment was the bedt 
