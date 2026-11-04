@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#this scripts is being written to take the updated expanded chimp and gorilla conserved lncRNA files (from the synteny analysis on the novel lncRNAs from newly assemled transcriptomes)
+#this script is being written to take the updated expanded chimp and gorilla conserved lncRNA files (from the synteny analysis on the novel lncRNAs from newly assemled transcriptomes)
 #we are also looking at the original conserved mouse lncRNAs as these were not reanalysed as there was a decent number of conserved annotated human lncRNAs to mouse
 
 import pandas as pd
