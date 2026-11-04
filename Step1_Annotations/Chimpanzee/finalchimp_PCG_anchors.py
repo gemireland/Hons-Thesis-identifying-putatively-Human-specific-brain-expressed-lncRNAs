@@ -1,3 +1,4 @@
+#this script has been written to find the PCG blocks coords previosuly extracted and convert them into BED format
 input_file = "outputfinalchimpensstep1"
 output_file = "Chimp_PCG_Blocks.bed"
 
@@ -17,6 +18,7 @@ for line in f:
     clean_line = line.replace("[", "").replace("]", "").replace("'", "").replace(",", "")
     fields = clean_line.split()
 
+    #extracting these fields:
     if len(fields) >= 5:
         gene = fields[0]
         chrom = fields[1]
@@ -32,4 +34,4 @@ for line in f:
 
 w.close()
 
-print("Finished making Chimp_PCG_Blocks.bed")
+print("Chimp_PCG_Blocks.bed made")
