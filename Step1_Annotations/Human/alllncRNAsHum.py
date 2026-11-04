@@ -1,34 +1,20 @@
-#this script is generated to be universal to extract lncRNA gene blocks from a GTF or gencode file. It will work for any species as long as the GTF file is formatted correctly and contains the necessary attributes to identify lncRNAs.
-#this is used on gencode human but is still working?
+#This script is used ti extract all lncRNA transcripts annotated in the GTF file
+#This script also groups the isoforms into gene-level blocks 
+# this script is generated to be universal to extract lncRNA gene blocks from a GTF or gencode file
+#this will work for any species as long as the GTF file is formatted correctly and contains the necessary attributes to identify lncRNAs
+#this script is used on gorilla 
 
-
-"""
-Extract lncRNA gene blocks from a GTF file.
-
-The script:
-
-1. Reads transcript entries from a GTF file.
-2. Identifies lncRNA transcripts using either:
-       gene_type
-       gene_biotype
-       transcript_type
-       transcript_biotype
-3. Groups all transcript isoforms belonging to the same gene.
-4. Creates one lncRNA block per gene:
-       block start = smallest isoform start
-       block end   = largest isoform end
-5. Writes the lncRNA name, chromosome, start, end, strand
-   and number of isoforms to a TSV file.
-"""
+#remember to run this script on the HPC by saying:
+# python3 alllncRNAsHum.py input_file.gtf -o output_file.tsv
 
 import argparse        #this module is used to parse command line arguments (parse means to analyze and extract information from a string)
 import csv             #this module is used to read and write tabular data in CSV format
-import sys             #this module provides access to some variables used or maintained by the interpreter and to functions that interact strongly with the interpreter
+import sys             
 from collections import defaultdict        #this module provides a dictionary-like object that allows you to create a dictionary with default values for non-existent keys
-from pathlib import Path        #this module provides an object-oriented interface for working with file system paths
+from pathlib import Path        
 
-##### A lncRNA can be any of these biotypes/gene types
-#####EDIT IF NEEDED
+#defining that lncRNA can be any of these biotypes/gene types
+#####EDIT IF NEEDED (these are the biotypes that I was told to include)
 
 LNCRNA_BIOTYPES = {
     "lncRNA",
@@ -41,36 +27,23 @@ LNCRNA_BIOTYPES = {
     "non-coding",
 }
 
-#We need to convert the 9th column in the GTF file into a dictionary so we can easily access the attributes of each transcript. The 9th column is a semicolon-separated list of key-value pairs, where the key is the attribute name and the value is the attribute value. We will use a function to parse this column and return a dictionary of attributes.
-'''Example input:
-        gene_id "ENSMUSG00000102693";
-        transcript_id "ENSMUST00000193812";
-        gene_type "lncRNA";
-        gene_name "4933401J01Rik";
+#We need to convert the 9th column in the GTF file into a dictionary so we can easily access the attributes of each transcript. 
+#The 9th column is a semicolon-separated list of key-value pairs, where the key is the attribute name and the value is the attribute value. We will use a function to parse this column and return a dictionary of attributes.
 
-    Example output:
-        {
-            "gene_id": "ENSMUSG00000102693",
-            "transcript_id": "ENSMUST00000193812",
-            "gene_type": "lncRNA",
-            "gene_name": "4933401J01Rik"
-        }
-    '''
 def parse_attributes(attribute_text):
 
     attributes = {}
 
     for item in attribute_text.strip().split(";"):
-        item = item.strip()                            #this removes any leading or trailing whitespace from the item
+        item = item.strip()                            #this removes any whitespace from the value
 
         if not item:
             continue
 
-        #the GTF typical format is key "value", so we need to split on the first space and remove the quotes from the value
-        #each individual attribute is a key-value pair separated by a space, and the value is enclosed in double quotes. We will split the item into two parts: the key and the value, using the first whitespace as the delimiter. Then we will remove the quotes from the value and store it in the attributes dictionary.
+        #the GTF format is key "value", so we need to split at the first space and remove the quotes from the value
         parts = item.split(None, 1)      #this splits the item into two parts: the key and the value, using the first whitespace as the delimiter
 
-        if len(parts) != 2:
+        if len(parts) != 2:   #this ignores any attrivute that is not a pair od a key and a value
             continue
 
         key = parts[0]
@@ -93,7 +66,7 @@ def add_chr_prefix(chromosome):
 
 def get_biotype(attributes):
 
-    #get teh transcript or biotype from the gtf or gencode
+    #get the first available biotype from the attributes dictionary, in the order of preference: gene_type, gene_biotype, transcript_type, transcript_biotype. If none of these are available, return an empty string.
 
     return(
         attributes.get("gene_type")
@@ -130,6 +103,7 @@ def chromosome_sort_key(chromosome):
 
 def read_lncrna_isoforms(input_file):
 
+    #creating this so that each gene_id maps to its transcript starts, end and other attribute
     genes = {}
 
     total_lines = 0
@@ -162,7 +136,7 @@ def read_lncrna_isoforms(input_file):
             strand = fields[6]
             attribute_text = fields[8]
 
-            # Only transcript rows represent complete isoforms.
+            #using transcript-level so that the individual isoforms and be grouped based on their boundaries and combine them into one genomic block  for each gene 
             if feature_type != "transcript":
                 continue
 
@@ -171,6 +145,7 @@ def read_lncrna_isoforms(input_file):
             if strand not in {"+", "-"}:
                 continue
 
+            #making the GTF coords into integers so we can calculate max and min when creating the blocks
             try:
                 start = int(fields[3])
                 end = int(fields[4])
@@ -178,7 +153,7 @@ def read_lncrna_isoforms(input_file):
             except ValueError:
 
                 print(
-                    f"Warning: invalid coordinates on line {line_number}",
+                    f"invalid coords on {line_number}",
                     file=sys.stderr,
                 )
 
@@ -188,7 +163,7 @@ def read_lncrna_isoforms(input_file):
 
             biotype = get_biotype(attributes)
 
-            if biotype not in LNCRNA_BIOTYPES:
+            if biotype not in LNCRNA_BIOTYPES:    #we are retaining only the lncRNA biotyes specified above 
                 continue
 
             lncrna_transcript_rows += 1
@@ -196,7 +171,7 @@ def read_lncrna_isoforms(input_file):
             gene_id = attributes.get("gene_id")
 
             if not gene_id:
-                missing_gene_id_rows +=1
+                missing_gene_id_rows +=1     #this showsthat we can only group the isoforms if they have a gene identifier
                 continue
 
             gene_name = attributes.get("gene_name", gene_id)     #this gets the gene name from the attributes dictionary, and if it does not exist, it uses the gene ID as the gene name
@@ -204,7 +179,7 @@ def read_lncrna_isoforms(input_file):
 
             if gene_id not in genes:
  
-                genes[gene_id] = {            #this creates a new key in the genes dictionary for the gene ID, and initializes it with a dictionary containing the gene name, chromosome, strand, and an empty list of isoforms
+                genes[gene_id] = {            #this creates a new key in the genes dictionary for the gene ID and initializes it with a dictionary containing the gene name, chromosome, strand, and an empty list of isoforms
                     "gene_name": gene_name,
                     "chromosome": chromosome,
                     "strand": strand,
@@ -224,12 +199,12 @@ def read_lncrna_isoforms(input_file):
                 conflicting_records += 1
 
                 print(
-                    f"Warning: gene{gene_id} occurs on >1 chr or strand so skipping line {line_number}",
+                    f"gene{gene_id} occurs on diff chr so line skipped: {line_number}",
                     file=sys.stderr,
                 )
 
                 continue
-
+            #what this is doing is that it appends (adds to) the boundaries of each transcript if they have the same gene_id and stores it so it can be combined later
             gene_record["starts"].append(start)
             gene_record["ends"].append(end)
             gene_record["transcript_ids"].add(transcript_id)
@@ -259,6 +234,7 @@ def make_lncrna_blocks(genes):
         if not gene_record["ends"]:             #this checks if the "ends" list in the gene record is empty, and if so, it skips to the next iteration of the loop
             continue
 
+        #we want to define the start and ends of our gene block 
         block_start = min(gene_record["starts"])       #this calculates the start of the lncRNA block as the minimum of all isoform starts for the gene
         block_end = max(gene_record["ends"])           #this calculates the end of the
 
@@ -267,6 +243,7 @@ def make_lncrna_blocks(genes):
         else:
             isoform_count = len(gene_record["starts"])        #if the "transcript_ids" set is empty, it calculates the number of isoforms as the length of the "starts" list in the gene record
 
+        #we are creating one output row for each lncRNA gene block conatining all the info below
         lncrna_blocks.append(
             {
                 "lncRNA_name": gene_record["gene_name"],
@@ -280,6 +257,7 @@ def make_lncrna_blocks(genes):
             }
         )    
 
+    #we want to order the lncRNA blocks by chromosome, position (using start and end) and gene ID
     lncrna_blocks.sort(
         key=lambda row: (
             chromosome_sort_key(row["chromosome"]),
@@ -291,7 +269,7 @@ def make_lncrna_blocks(genes):
 
     return lncrna_blocks
 
-def write_lncrna_blocks(lncrna_blocks, output_file):       #write teh lncRNA blocks to a TSV file, with the columns: lncRNA name, gene ID, chromosome, start, end, strand, number of isoforms, and biotypes.
+def write_lncrna_blocks(lncrna_blocks, output_file):       #write teh lncRNA blocks to a TSV file with the columns lncRNA name, gene ID, chromosome, start, end, strand, number of isoforms, and biotypes
 
     fieldnames = [
         "lncRNA_name",
@@ -325,20 +303,20 @@ def parse_arguments():      #this will read the input and output file names from
 
     parser = argparse.ArgumentParser(
         description=(
-            "Extract lncRNA isoforms from GTF file and condense them all into a single lncRNA gene block per lncRNA"
+            "take lncRNA isoforms from GTF file and collapse them intoa single lncRNA gene block per lncRNA"
         )
     )
 
     parser.add_argument(
         "input_file",
-        help = "Input GTF annotation file"
+        help = "GTF annotation file"
     )
 
     parser.add_argument(
         "-o",
         "--output",
         default = "lncRNA_gene_blocks.tsv",
-        help = "Output TSV file"
+        help = "final TSV file"
     )
 
     return parser.parse_args()
@@ -350,10 +328,10 @@ def main():
 
     if not gtf_path.is_file():
         sys.exit(
-            f"Error:GTF file not found: {gtf_path}"
+            f"can't find file: {gtf_path}"
         )
 
-    print(f"Reading GTF file: {gtf_path}")
+    print(f"busy reading GTF file: {gtf_path}")
 
     genes, statistics = read_lncrna_isoforms(gtf_path)
 
@@ -377,31 +355,31 @@ def main():
     )
 
     print(
-        f"Transcript rows examined: "
+        f"number of transcript rows: "
         f"{statistics['transcript_rows']}"
     )
     print(
-        f"lncRNA transcript rows found: "
+        f"lncRNA transcript rows: "
         f"{statistics['lncrna_transcript_rows']}"
     )
     print(
-        f"lncRNA gene blocks written: "
+        f"lncRNA gene blocks made: "
         f"{len(lncrna_blocks)}"
     )
     print(
-        f"Total lncRNA isoforms represented: "
+        f"total lncRNA isoform numbers: "
         f"{total_isoforms}"
     )
     print(
-        f"Rows missing gene_id: "
+        f"gene_ids missing in rows: "
         f"{statistics['missing_gene_id_rows']}"
     )
     print(
-        f"Conflicting records skipped: "
+        f"skipped: "
         f"{statistics['conflicting_records']}"
     )
     print(
-        f"Results saved to: {args.output}"
+        f"all saved to: {args.output}"
     )
 
 
