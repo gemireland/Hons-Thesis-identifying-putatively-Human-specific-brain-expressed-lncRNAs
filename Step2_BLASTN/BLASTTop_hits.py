@@ -1,24 +1,10 @@
 #!/usr/bin/env python3
 
-#---------------- EXPLANATION OF THE SCRIPT ----------------
+#EXPLANATION OF THE SCRIPT 
 #this script reads in the tab-delimited BLAST output (.tsv) that was in the format :
 # -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore"
 
-#The output showed that a single human PCG often aligned to the several different mouse PCGs. 
-#Also the same human-mouse PCG pair can have several separate BLAST alignment fragments
-
-#so I have created this script to:
-#1. Read every line of the BLATS output in the .tsv file
-#2. Groups alignmnets by exact human query PCG and mouse subject PCG
-# 3. Combines all BLAST alignment fragments that belong to the same human query PCG and the same mouse subject PCG
-# example: Human OR4F5 -> Mouse OR4F5. may have several separate BLAST alignment fragments, but they will be combined into a single alignment
-# 
-# 4. Calculates combined similarity statistics 
-# 5. Extracts the genomic coordinates and strand for both genes
-# 6. Ranks all mouse candidates separately for each human query PCG based on the combined similarity statistics
-#  (the top mouse candidate for each human PCG will have: rank_for_query =1)
-
-#-------- summary done --------
+#The output showed that a single human PCG often aligned to the several different mouse PCGs so we need to select which alignment was the bedt 
 
 #import csv so that python can read and write tab-delimited files
 import csv
@@ -31,7 +17,7 @@ from collections import defaultdict
 #path is used to check whether teh input file exists
 from pathlib import Path
 
-# ------final output column layout---------
+
 #these ouput column names are the headers of the output tsv file
 
 OUTPUT_COLUMN_NAMES = [
@@ -43,7 +29,7 @@ OUTPUT_COLUMN_NAMES = [
     "query_gene_end",
     "query_strand",
 
-    #Mouse subject info
+    #info about our subject sequence (the species being comapred against the human query)
     "sseqid",
     "subject_chromosome",
     "subject_gene_start",
@@ -63,20 +49,12 @@ OUTPUT_COLUMN_NAMES = [
     "rank_for_query"
 ]
 
-#---using parse_gene_location -------
+#we use parse gene location to extract the chromosome, genomic start, genomic end and strand from a BLAST sequence identifier
 
 def parse_gene_location(sequence_id):
     
-    """ Extract chrom, genomic start, genomic end and strand from a BLAST sequence identifier
-    
-    format:
-        GeneName::chr1:1234-12345(+)
-    
-    """
-
-    
     try: 
-        #split teh gene name from the genomic location (eg OR4F5::chr1:65418-71585(+) becomes:
+        #split teh gene name from the genomic coords (eg OR4F5::chr1:65418-71585(+) becomes:
         # OR4F5
         # chr1:65418-71585(+))
         location = sequence_id.split("::", 1)[1]
@@ -101,33 +79,21 @@ def parse_gene_location(sequence_id):
         return "", "", "", ""
 
 
-#--------- to find_top_hits for human PCG ---------
-
+#to find top hits/matches for each human PCG
 def find_top_hits(input_file, output_file):
 
-    """ Read the full BLAST TVS file, combine all the alignments that belong to the same human 
-    query PCG and mouse subject PCG, and rank the mouse candidates for every human query PCG """     
-
-    #------------------------------------------
-    # we are creating a NESTED DICTIONARY to store combined statistics
-    #------------------------------------------
-    #format: 
-    #          pair_statistics[query_id][subject_id]
-    # example:
-    #         pair_statistics["OR4F5"]["Orf4f5"]
-
-    #-----------------------------------
-
+    # we are creating a nested dictionary (this is a dictionary of dictionaries) to store our combined statistics
+    #we use pair statistics  because we are storing statistics for each human-mouse gene pair
     pair_statistics = defaultdict(
         lambda: defaultdict(
             lambda: {
-                #Number of separate BLAST fragments 
+                #number of separate BLAST alignments for this human-mouse gene pair
                 "number_of_alignments":0,
 
                 #sum of all alignment lengths
                 "total_alignment_length":0,
 
-                #sum of: pident x alignment length
+                #sum of percentage identity x alignment length
                 #(this is later divided by the total alignment length to calculate the length-weighted pident)
                 "weighted_identity_sum": 0.0, 
 
@@ -139,7 +105,7 @@ def find_top_hits(input_file, output_file):
                 #this is later divided by total alignment length to give a combined length-weighted e-value score
                 "weighted_log_evalue_sum": 0.0,
 
-                #smallest individual e-value, kept for reference
+                #smallest individual e-value, kept to check incase selection is wrong
                 "best_evalue": float("inf")
             }
         )
@@ -151,10 +117,7 @@ def find_top_hits(input_file, output_file):
     #count invalid rows that are skipped 
     invalid_blast_lines = 0
 
-    #-------------------------
-    #open and read the complete BLAST TSV file
-    #--------------------------------------
-
+  #now we need to see the BLASTN output file and read it a line at a time
     with open(input_file, "r", newline="") as blast_file:
 
         #tell python that the file is tab-delimited 
@@ -163,17 +126,17 @@ def find_top_hits(input_file, output_file):
         #read one BLAST alignment at a time until the end of the file
         for line_number, row in enumerate(reader, start = 1):
 
-            #ignore empty lines
+            #ignore lines with ntohing in them (eg: blank lines at the end of the file)
             if not row:
                 continue
 
             total_blast_lines +=1
 
-            #the format outfmt 6 line should contain 12 columns for this analysis
+            #the format outfmt 6 line (as specified in our BLAST .sh files) should contain 12 columns for this analysis
             if len(row) != 12:
                 print(
-                    f"Skipping invalid BLAST line{line_number}:"
-                    f"expected 12 columns, found only {len(row)}"
+                    f"skipped BLASTN line{line_number}:"
+                    f"as we expected 12 columns but found {len(row)}"
                 )
 
                 invalid_blast_lines += 1
@@ -187,32 +150,32 @@ def find_top_hits(input_file, output_file):
 
             #convert the numerical BLAST fields from text into python numbers
             try:
-                #column 3:percentage identity 
+                #column 3 is the percentage identity (float is a way to store decimal numbers in python)
                 pident = float(row[2])
 
-                #column 4: alignment length
+                #column 4 is the alignment length
                 alignment_length = int(row[3])
 
                 #column 11 is the e-value
                 evalue = float(row[10])
 
-                #column 12: bitscore
+                #column 12 is the bitscore
                 bitscore = float(row[11])
 
             except ValueError:
                 print(
-                    f"Skipping invalid BLAST line{line_number}:"
-                    "a numeric field could not be converted"
+                    f"skipped BLASTN line{line_number}:"
+                    f"a numeric field could not be converted"
                 )
 
                 invalid_blast_lines +=1
                 continue
 
-            #alignment length must be greater than 0 because it will later be used as a divisor
+            #alignment length must be greater than 0 because it will later be used as a divisor to calculate length-weighted statistics
             if alignment_length <= 0:
                 print(
-                    f"Skipping invalid BLAST line{line_number}:"
-                    "alignment length must be greater than zero"
+                    f"skipped BLASTN line{line_number}:"
+                    f"alignment length must be greater than zero"
                 )
 
                 invalid_blast_lines +=1
@@ -227,36 +190,23 @@ def find_top_hits(input_file, output_file):
             #add this fragment's length to the total aligned length for the gene pair
             stats["total_alignment_length"] += alignment_length
 
-            #---------------------
-            #COMBINING % IDENTITY
-            #---------------------
+            #TO COMBINE PERCENTAGE IDENTITY AND ALIGNMENT LENGTH (here is an example)
             #
-            #Alignment 1: 83% over 1000 bp
-            #Alignment 2: 82% over 100bp
+            #1st alignment: 83% idnetity over 1000 bp
+            #2nd alignmnet: 82% idnetity over 100bp
             #
             #weighted identity
-            # ( 83 x 1000) + (82 x 100)
-            # -------------------------
-            #.    1000 + 100
-            # --------------------------
-
+            # [(83x1000)+(82x100)] / 1000 + 100 = 82.91%
+            
             stats["weighted_identity_sum"] += (
                 pident * alignment_length
             )
 
             stats["total_bitscore"] += bitscore
 
-            #-------------------
-            # combine E-values
-            #-------------------
-            #
-            #raw v-values should not be averaged directly because they span a very large numerical range
-            #instead e-values are convreted to -log10(e-value)
-            #
-            # 1e-10 is 10
-            #1e -100 is 100
-            #
-            # a larger transformed value represents stronger alignmnet evidence
+            #WE ARE COMBINING E VALUES AND ALIGNMENT LENGTHS
+            #the raw e-values should not be averaged directly as it spans a large range of numbers so they must be converted to -log10(e-value)
+            #a larger transformed value serves as evidence of a stronger alignmnet 
 
             #BLAST may report strong evalues as 0.0 so since log10(0) can't be calculated, use a very small positive evalue
             safe_evalue = max(evalue, 1e-300)
@@ -275,41 +225,38 @@ def find_top_hits(input_file, output_file):
                 evalue        
             )
 
-    #-------------------------------------------
-    #CALCULATE COMBINED STATS TO RANK HITS
-    #-------------------------------------------
+   #we want to rank the matches/the hits so we need to calculate some combined statistics 
     ranked_results = []
 
     #process one human query at a time
     for query_id, subject_hits in pair_statistics.items():
 
-        #this list stores all mouse candidates for teh current human query PCG
+        #this list stores all comparison species candidates for the current human query PCG
         candidates = []
 
-        #process one mouse candidate PCG at a time
+        #process one species candidate PCG at a time
         for subject_id, stats in subject_hits.items():
 
             #total aligned length across all fragments
             total_length = stats["total_alignment_length"]
 
-            #calculate the length-eighted percentage identity
+            #calculate the length-weighted percentage identity
             weighted_percentage_identity = (
                 stats["weighted_identity_sum"]/total_length
             )
 
-            #estimate the total number of identical aligned bases
-            #
-            #example: 83% identity over 1000bp: 83x1000/100 = 830 identical bases
+            #working out the total number of identical bases across all alignments
+            #an example would be: 83% identity over 1000bp => 83x1000/100 = 830 identical bases
             total_identical_bases = (
                 stats["weighted_identity_sum"]/100.0
             )
 
-            #calc the length-weighted transformed evalue
+            #calc the length-weighted log e-value
             weighted_log_evalue = (
                 stats["weighted_log_evalue_sum"]/total_length
             )
  
-            #extract human query gene coords
+            #human query gene coords
             (
                 query_chromosome,
                 query_gene_start,
@@ -325,7 +272,7 @@ def find_top_hits(input_file, output_file):
                 subject_strand
             ) = parse_gene_location(subject_id)
 
-            #store the combined result for this human-subject pair
+            #store the combined result for this human vs comparison subject pair
 
             candidate = {
 
@@ -343,7 +290,7 @@ def find_top_hits(input_file, output_file):
                 "subject_gene_end": subject_gene_end,
                 "subject_strand": subject_strand,
 
-                #combined BLAST statistics
+                #combined statistics
                 "number_of_alignments": (
                     stats["number_of_alignments"]
                 ),
@@ -365,22 +312,10 @@ def find_top_hits(input_file, output_file):
                 )                
             }
             candidates.append(candidate)
+                
+                
 
-        # ----------------------------------------------------
-        # RANK THE MOUSE CANDIDATES FOR THIS HUMAN PCG
-        # ----------------------------------------------------
-        #
-        # Ranking priority:
-        #
-        # 1. Highest weighted percentage identity
-        # 2. Longest total alignment length
-        # 3. Highest total bitscore
-        # 4. Highest weighted -log10(E-value)
-        #
-        # Python sorts from smallest to largest by default.
-        # Negative signs make larger values appear first.
-        # ----------------------------------------------------
-
+        #This is the order of preference for ranking the candidates: 
         #python sorts by the first value and if equal then moves to the second for comparison and so on
         candidates.sort(
             key=lambda hit: (
@@ -392,15 +327,12 @@ def find_top_hits(input_file, output_file):
             )
         )
 
-        # Keep only the best mouse candidate for this human PCG
+        #keep only the best subject candidate for this human PCG
         for rank, candidate in enumerate(candidates, start=1):
             candidate["rank_for_query"] = rank
             ranked_results.append(candidate)
 
-        # ----------------------------------------
-        # Write a second file containing only the
-        # top-ranked mouse hit for each human PCG
-        # ----------------------------------------
+       #we wanted a separate file that has only the top ranked blast match
 
         top1_output = output_file.replace(".tsv", "_Top1.tsv")
 
@@ -442,19 +374,15 @@ def find_top_hits(input_file, output_file):
 
                     writer.writerow(result_to_write)
 
-    # Sort the final output so that all results for the same
-    # human query stay together and rank 1 is shown first.
+    #order the output so that all results for the same human query are together, showing rank 1 first
     ranked_results.sort(
         key=lambda hit: (     
             hit["qseqid"],
             hit["rank_for_query"]
         )
     )
-
-    #--------------------------------
-    # WRITE THE OUTPUT TSV FILE
-    #--------------------------------
-
+    
+    #now we need to write the output file with the ranked results
     with open(output_file, "w", newline = "") as outfile:
 
         #create a tab-delimited dictionary writer
@@ -495,58 +423,33 @@ def find_top_hits(input_file, output_file):
             )
             writer.writerow(result_to_write)
 
-    
-    # --------------------------------------------------------
-    # PRINT A SUMMARY TO THE TERMINAL
-    # --------------------------------------------------------
 
     number_of_queries = len(pair_statistics)
     number_of_gene_pairs = len(ranked_results)
 
-    print("\nFinished!")
-    print(f"Input file: {input_file}")
-    print(f"Output file: {output_file}")
-    print(f"BLAST lines examined: {total_blast_lines}")
-    print(f"Invalid lines skipped: {invalid_blast_lines}")
-    print(f"Human query PCGs found: {number_of_queries}")
-    print(f"Human-mouse gene pairs ranked: {number_of_gene_pairs}")
-    print(
-        "The top subject hit for each human PCG is the row "
-        "where rank_for_query equals 1."
-    )
+    print("\nselection complete")
+    print(f"lines skipped: {invalid_blast_lines}")
+    print(f"human query PCGs identified {number_of_queries}")
+    print(f"human-subject pairs ranked {number_of_gene_pairs}")
+    print("to choose the top hit take the row where rank_for_query equals 1")
 
 
-# ============================================================
-# MAIN FUNCTION
-# ============================================================
+#need to write this if we want to run the script from teh command line to tell it that this si the main function 
+#run it by python3 BLASTTop_hits.py input.tsv output.tsv
 
 def main():
 
-    # The script should be run with:
-    #
-    # python3 script_name.py input.tsv output.tsv
-    #
-    # Therefore:
-    #
-    # sys.argv[0] = script filename
-    # sys.argv[1] = input BLAST TSV file
-    # sys.argv[2] = output ranked TSV file
-    #
-    # There must be exactly 3 command-line arguments in total.
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 3:   #to check I have given this file name, the input and output file names 
 
-        print(
-            "Usage: python3 Mtopblasthits_ranked.py "
-            "input.tsv output.tsv"
-        )
+        print("can't use all 3 files")
 
         sys.exit(1)
 
-    # Read the input and output filenames.
+    #get the input and output file names from the command line arguments
     input_file = sys.argv[1]
     output_file = sys.argv[2]
 
-    # Stop with a clear error if the input file does not exist.
+    #if the files don't exist then say error
     if not Path(input_file).is_file():
 
         print(
@@ -558,10 +461,7 @@ def main():
     # Run the BLAST grouping and ranking analysis.
     find_top_hits(input_file, output_file)
 
-
-# ============================================================
-# RUN THE SCRIPT
-# ============================================================
-
+#need to write this if we want to run the script from teh command line to tell it that this si the main function 
+#run it by python3 BLASTTop_hits.py input.tsv output.tsv
 if __name__ == "__main__":
-    main()       
+    main() 
