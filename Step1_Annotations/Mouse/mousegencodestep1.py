@@ -1,5 +1,5 @@
 #mousegencodestep1.py
-
+#this script was written in very basic code, I refined it in later scripts 
 #to read the mouse gtf file into a pandas DataFrame
 f = open('gencode.vM38.annotation.gtf', 'r')
 mouselines = f.readlines() #to read the gtf file into a list of lines, which we can then process to extract the information we need for our analysis
@@ -228,7 +228,7 @@ for lnc in lncRNAs_gene_blocks:
     print("downstream PCG:", nearest_downstream)
     print()
 
-# save mouse PCG blocks
+#save mouse PCG blocks
 
 w = open("Mouse_PCG_Blocks.bed", "w")
 
