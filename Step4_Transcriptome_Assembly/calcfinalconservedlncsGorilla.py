@@ -33,8 +33,8 @@ total = original_ids | stringtie_ids
 print("conserved from orig annotations", len(original_ids))
 print("conserved to stringtie", len(stringtie_ids))
 print("in both stringtie and orig", len(both))
-print("original only:", len(original_only))
-print("stringtie only:", len(stringtie_only))
+print("original only", len(original_only))
+print("stringtie only", len(stringtie_only))
 print("final Gorilla lncs that are uniquely conserved", len(total))
 
 
