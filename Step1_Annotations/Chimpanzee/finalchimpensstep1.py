@@ -1,4 +1,5 @@
 #chimpensstep1.py
+#this is very basic code and the script was refined in later scripts
 
 #to read the chimp gtf file into a pandas DataFrame
 f = open('Pan_troglodytes.Pan_tro_3.0.116.gtf', 'r')
@@ -99,13 +100,13 @@ print(all_biotypes)
     #print(gene_id, len(chimplncRNAs['+'][gene_id]))
 
 
-#to see a gene with a lot of isoforms
+#to see a gene with a lot of isoforms (this was done to check as the script wasn't working)
 #for gene_id in chimplncRNAs['+']:
-  #  print(gene_id)
-  #  print(chimplncRNAs['+'][gene_id])
-   # break
+  #print(gene_id)
+  #print(chimplncRNAs['+'][gene_id])
+   #break
 
-print("Creating lncRNA gene blocks:")
+print("Creating lncRNA gene blocks")
 #now we want to create gene blocks for the lncRNAs, which are the coordinates that encompass all the isoforms of a gene, so we can compare them to the PCG gene blocks. We will create a dictionary of lncRNA gene blocks keyed by gene name, with the value being a list of coordinates for each isoform of that gene. We will also filter out any lncRNA genes that have isoforms on different chromosomes, as this would make it difficult to compare them to PCG gene blocks.
 lncRNAs_gene_blocks = []
 
@@ -122,7 +123,7 @@ for strand in chimplncRNAs:
         gene_block_end = max(ends)
 
         lncRNAs_gene_blocks.append([gene_id, chrom, gene_block_start, gene_block_end, strand, len(isoforms)])
-       # print(gene_id, chrom, gene_block_start, gene_block_end, len(isoforms)) #to check the gene blocks we have created for the lncRNAs
+       #print(gene_id, chrom, gene_block_start, gene_block_end, len(isoforms)) #to check the gene blocks we have created for the lncRNAs
 
 
 #now we need to find the nearest PCG to each lncRNA gene block
@@ -146,19 +147,19 @@ for line in chimplines:
     frame = columns[7]
     attributes = columns[8]
 
-    # keep transcript rows because these represent isoforms
+    #keep transcript rows because these represent isoforms
     if feature != "transcript":
         continue
 
-    # keep only protein coding transcripts
+    #keep only protein coding transcripts
     if 'gene_biotype "protein_coding"' not in attributes:
         continue
 
-    # extract gene name and transcript ID
-    # Extract the unique Ensembl gene ID
+    #extract gene name and transcript ID
+    #extract the unique Ensembl gene ID
     gene_id = attributes.split('gene_id "')[1].split('"')[0]
 
-    # Extract the gene symbol where available
+    #extract the gene symbol where available
     if 'gene_name "' in attributes:
         gene_name = attributes.split('gene_name "')[1].split('"')[0]
     else:
@@ -166,7 +167,7 @@ for line in chimplines:
 
     transcript_id = attributes.split('transcript_id "')[1].split('"')[0]
 
-    # IMPORTANT:
+    #IMPORTANT:
     # Group transcripts using gene_id because gene_id is unique.
     # Store gene_name separately for the final output and BLAST matching.
     if gene_id not in pcgsDict[strand]:
@@ -187,8 +188,8 @@ for strand in pcgsDict:
         total_isoforms += len(
             pcgsDict[strand][gene_id]["isoforms"]
         )
-print("Total pcgs:", len(pcgsDict["+"]) + len(pcgsDict["-"]))
-print("Total pcgs isoforms:", total_isoforms)
+print("total pcgs", len(pcgsDict["+"]) + len(pcgsDict["-"]))
+print("total pcgs isoforms", total_isoforms)
 
 # count isoform numbers per gene on + strand: COMMENTING OUT AS NOT ESSENTIAL TO CODE AND WANT TO TRACK OUTPUT MORE EASILY
 '''for gene_id in pcgsDict['+']:
@@ -238,8 +239,6 @@ for strand in pcgsDict:
 #CREATE A VIARABLE TO STORE THE UPSTREAM AND DOWNSTREAM
 
 anchors = []
-
-
 
 for lnc in lncRNAs_gene_blocks:
 
@@ -295,21 +294,8 @@ for lnc in lncRNAs_gene_blocks:
     #NOW WE CAN STORE THIS IN THE VARIABLE ANCHORS
     anchors.append((lnc,nearest_upstreamgene,nearest_downstreamgene))
 
-        #
 
-#here you have repetitive code so I am commenting it out - note the indentations are also wrong here, so you can delete this once you understand the error
-'''upstream_pcgs.sort(key=lambda x: x[1])
-downstream_pcgs.sort(key=lambda x: x[1])
-
-nearest_upstream = upstream_pcgs[0] if len(upstream_pcgs) > 0 else None
-nearest_downstream = downstream_pcgs[0] if len(downstream_pcgs) > 0 else None''' 
-
-'''print("lncRNA:", lnc_name)
-print("upstream PCG:", nearest_upstream)
-print("downstream PCG:", nearest_downstream)
-print()'''
-
-#TO PRINT EACH LNC AND ITS NEIGHBOURS YOU CAN NOW LOOP THROUGH ANCHORS
+#TO PRINT EACH LNC AND ITS NEIGHBOURS, LOOP THROUGH ANCHORS
 
 for a in anchors:
     lnc = a[0]
@@ -385,5 +371,5 @@ with open(output_file, "w") as w:
             f"{downstream[5]}\n"
         )
 
-print("Finished writing:", output_file)
-print("Total chimp lncRNA blocks written:", len(anchors))
+print("made", output_file)
+print("total chimp lncRNA blocks written", len(anchors))
