@@ -14,7 +14,7 @@ from collections import defaultdict        #this module provides a dictionary-li
 from pathlib import Path        
 
 #defining that lncRNA can be any of these biotypes/gene types
-#####EDIT IF NEEDED (these are the biotypes that I was told to include)
+#####(these are the biotypes that I was told to include)
 
 LNCRNA_BIOTYPES = {
     "lncRNA",
