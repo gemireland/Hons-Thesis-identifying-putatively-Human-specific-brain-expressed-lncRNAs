@@ -10,11 +10,11 @@ import re
 from collections import defaultdict
 
 #defining that the input gtf is the  merged StringTie GTF file (not the orginal GTF from Ensembl)
-input_gtf = "Chimp_AllStringTiegtfs_merged_FPKM0.5.gtf"
+input_gtf = "Gorilla_AllStringTiegtfs_merged_FPKM0.5.gtf"
 
 #defining the output BED file
 #We use BED12 as it stores the individual exon positions within each transcript
-output_bed = "Chimp_StringTie_transcripts.bed12"
+output_bed = "Gorilla_StringTie_transcripts.bed12"
 
 #we want to all exon coordinates belonging to each transcript
 #this is because a transcript contains many exons and introns so we want the start adn end of every exon contained within a transcript
