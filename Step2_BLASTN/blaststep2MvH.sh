@@ -6,9 +6,10 @@
 #SBATCH --output=human_vs_mouse_123456.out
 #SBATCH --error=human_vs_mouse_123456.err
 
+#only if blastn is installed in blast_env
 module load python/miniconda3-py3.12
 source /opt/exp_soft/miniconda3-py3.12/etc/profile.d/conda.sh
-conda activate bedtools_env
+conda activate bedtools_env    #this is the environmnet in which I installed BLASTN
 
 cd /scratch/irlgem001/Step2-blast
 
