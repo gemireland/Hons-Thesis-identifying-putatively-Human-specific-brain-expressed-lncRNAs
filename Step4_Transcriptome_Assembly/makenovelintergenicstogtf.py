@@ -6,11 +6,12 @@ import re
 #this script is being used to extract the novel intergenic IDs from the created tsv file and comparing them to the StringTie merged gtf to get the coordinates of 
 #the novel intergenic IDs so we can get their sequnces (making them fasta files) to then run cpc and feelnc to identify protein-coding ability
 
-#the input files are:
+#the input files are
+#change this for Chimpanzee !!!
 novel_tsvfile = "Gorilla_NOVEL_INTERGENIC.tsv"
 stringtie_gtf = "Gorilla_AllStringTiegtfs_merged_FPKM0.5.gtf"
 
-#output file
+#output file that will be written 
 output_gtf = "Gorilla_NOVEL_INTERGENIC.gtf"
 
 #to read in the transcript ids of the novel intergenic transcripts
@@ -22,14 +23,14 @@ with open(novel_tsvfile, "r") as infile:
     for row in reader:
         transcript_id = row["transcript_id"]
 
-        #only keep trasncripts classified as noverl intergenic or "u"
+        #only keep trasncripts classified as novel intergenic or "u" by gffcompare as class code
         if row["class_code"] == "u":
             novel_transcript_ids.add(transcript_id)
 
-#sanity check 
-print("Novel intergenic transcript IDs:", len(novel_transcript_ids))
+#sanity check that we are picking up the correct no. novel intergenic transcripts
+print("novel intergenic transcript IDs", len(novel_transcript_ids))
 
-#to extract these novel intergenic transcript ids from stringtie gtfs
+#to extract these novel intergenic transcript ids from stringtie gtfs (create a set)
 found_transcript_ids = set()
 written_lines = 0
 
@@ -38,12 +39,12 @@ with open(stringtie_gtf, "r") as infile, open(output_gtf, "w") as outfile:
         if line.startswith("#"):
             continue
 
-        #remember that rstrip removes extra whitespace and ensures newlines don't start at the end of the line above
+        #remember that rstrip removes extra whitespace and ensures newlines don't start at the end of the line above (I noticed this didn't run initially with thsi step)
         fields = line.rstrip("\n").split("\t")
 
         #this is because most gtf files have 9 columns
         if len(fields) < 9:    
-            continue
+            continue   #skipped 
 
         attributes = fields[8]
 
@@ -55,26 +56,24 @@ with open(stringtie_gtf, "r") as infile, open(output_gtf, "w") as outfile:
         if match:
             transcript_id = match.group(1)
 
-            #write trasncript/exon lines that are in novel_transcript_ids to the novel output file
+            #write trasncript lines that are in novel_transcript_ids to the novel output file
             if transcript_id in novel_transcript_ids:
                 outfile.write(line)
                 found_transcript_ids.add(transcript_id)
                 written_lines += 1
 
 #creating a summary of the results
-print("Novel transcript IDs requested:", len(novel_transcript_ids))
-print("Novel transcript IDs found in GTF:", len(found_transcript_ids))
-print("GTF lines written:", written_lines)
-print("Output saved to:", output_gtf)
+print("transcript IDs novel", len(novel_transcript_ids))
+print("novel transcript IDs found in GTF:", len(found_transcript_ids))
+print("GTF lines written", written_lines)
+print("saved result to", output_gtf)
 
+#calculting the ones missed 
 missing = novel_transcript_ids - found_transcript_ids
 
-print("Transcript IDs not found:", len(missing))
+print("no. transcript ids not found", len(missing))
 
-if missing:
-    print("First 10 missing transcript IDs:")
-    for transcript_id in sorted(missing)[:10]:
-        print(transcript_id)
+
 
             
 
