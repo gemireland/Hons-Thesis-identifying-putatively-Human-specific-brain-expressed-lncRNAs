@@ -1,6 +1,6 @@
 #!/usr/bin/env python3 
 import csv
-#this script is to gorup all transcript isoforms into gene-level blcoks to use in syntenic analysis
+#this script is to group all transcript isoforms into gene-level blcoks to use in syntenic analysis
 
 #these are the files being used/created
 
@@ -13,7 +13,6 @@ input_file = "/scratch/irlgem001/Step4-RNASeq/Chimp/Chimp_final_novel_lncRNAs.ts
 output_file = "/scratch/irlgem001/Step4-RNASeq/Chimp/Chimp_final_novel_lncRNA_blocks.tsv"
 
 #to read in the final lncRNA files that has multiple transcript isoforms per gene, we are grouping them according to gene_id
-
 gene_blocks = {}
 
 with open(input_file) as infile:
@@ -47,8 +46,7 @@ with open(input_file) as infile:
             gene_blocks[gene_id]["transcript_count"] += 1
 
 
-#writing the lncRNA gene blocks where each row is one lncRNA gene not a transcript isoform
-
+#writing the lncRNA gene blocks where each row is one lncRNA gene not a transcript isoform (making gene blocks)
 with open(output_file, "w") as outfile:
 
     outfile.write(
@@ -71,13 +69,9 @@ with open(output_file, "w") as outfile:
             f"{info['transcript_count']}\n"
         )
 
-#printing results to terminal
+print("lncRNA transcript candidates", sum(info["transcript_count"] for info in gene_blocks.values()))
 
-print("lncRNA gene block analysis")
+print("no. lncRNA gene blocks", len(gene_blocks))
 
-print("candidate lncRNA transcripts:", sum(info["transcript_count"] for info in gene_blocks.values()))
-
-print("lncRNA gene blocks:", len(gene_blocks))
-
-print("Output file:", output_file)
+print("created output file", output_file)
                         
