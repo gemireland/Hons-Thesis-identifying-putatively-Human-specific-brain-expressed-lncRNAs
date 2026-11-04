@@ -1,3 +1,4 @@
+#this script has been written to find the PCG blocks coords previously extracted and converts them into BED format
 input_file = "outputgorillastep1"
 output_file = "Gorilla_PCG_Blocks.bed"
 
