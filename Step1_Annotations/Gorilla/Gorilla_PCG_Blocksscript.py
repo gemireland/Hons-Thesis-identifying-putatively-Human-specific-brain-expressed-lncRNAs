@@ -17,7 +17,7 @@ for line in f:
 
     clean_line = line.replace("[", "").replace("]", "").replace("'", "").replace(",", "")
     fields = clean_line.split()
-
+    
     if len(fields) >= 5:
         gene = fields[0]
         chrom = fields[1]
@@ -31,11 +31,11 @@ for line in f:
         w.write(f"{chrom}\t{bed_start}\t{bed_end}\t{gene}\t0\t{strand}\n")
 
         count += 1
-
+        #this is because we originally identified this no. of PCGs
         if count == 21587:
             break
 
 
 w.close()
 
-print("Finished making Gorilla_PCG_Blocks.bed")
+print("Gorilla_PCG_Blocks.bed made")
