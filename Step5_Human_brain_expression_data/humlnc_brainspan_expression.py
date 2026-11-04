@@ -75,13 +75,9 @@ expressed_lncRNAs.to_csv(final_humlncvsbrainspan_expression, sep="\t", index=Fal
 
 #printing results to terminal for collection of results
 print("lncs in BrainSpan", results["BrainSpan_present"].sum())
-
 print("lncs not in BrainSpan", (~results["BrainSpan_present"]).sum())
-
 print("lncs expressed in BrainSpan >1 RPKM", len(expressed_lncRNAs))
-
 print("lncs present but not >1 RPKM", ((results["BrainSpan_present"]) & (results["BrainSpan_expressed"] == False)).sum())
-
 print("\ncreating file to save output")
 print(Humlnc_vs_BrainSpan_output)
 print(final_humlncvsbrainspan_expression)
