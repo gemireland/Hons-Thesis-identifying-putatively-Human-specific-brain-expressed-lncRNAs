@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-#I am wrirting this script to filter the FEELnc and CPC2 results for lncRNAs that are predicted by both tools. I will use the GTF file from FEELnc and the txt file from CPC2 to create a new file with only the lncRNAs that are present in both files.
+#I am wrirting this script to filter the FEELnc and CPC2 results for lncRNAs that are predicted by both potential calculators
+#I will use the GTF file from FEELnc and the txt file from CPC2 to create a new file with only the lncRNAs that are present in both files
 
-#re is quired to parse the GTF file and extract the gene_id from the attributes field. csv is required to read the CPC2 results file.
+#re is needed to parse the GTF file and extract the gene_id from the attributes field
 import re
 import csv
 
@@ -27,7 +28,7 @@ with open(initial_novel_intergenicgtf) as infile:
 
         fields = line.rstrip().split("\t")
 
-        #only keep correct gtf lines that have 9 fields
+        #only keep correct gtf lines that have 9 fields and that are exons (not introns!!!!)
         if len(fields) < 9 or fields[2] != "exon":
             continue
 
@@ -57,12 +58,11 @@ with open(initial_novel_intergenicgtf) as infile:
                 "exons": []
             }
 
-        #if the exon has already been seen for that transcript append it to the list. Store the start and end coordinates for the exons and all exons beloninging
-        #to the same transcript are grouped together
+        #if the exon has already been seen for that transcript append it to the list
+        #we want to store the start and end coordinates for the exons and all exons belonging to the same transcript are grouped together
         transcripts[transcript_id]["exons"].append((start, end))
 
-#this si a filter to ensure all transcripts are longer than 200 nucleotides (this is the minimum length of a lncRNA)
-
+#this is a filter to ensure all transcripts are longer than 200 nucleotides (this is the minimum length of a lncRNA by definition)
 #we are first calculating the length of each transcript by summating the lengths of all its exons
 #remember this is the SPLICED transcript length
 long_transcripts = {}
@@ -72,7 +72,7 @@ for transcript_id, info in transcripts.items():
     #you have to +1 for gtf coordinates
     length = sum(end - start + 1 for start, end in info["exons"])
 
-    #from here we only retain transcripts longer than 200nt, we are also creating the genomic interval
+    #from here we only retain transcripts longer than 200nt we are also creating the genomic interval (min vs max) 
     if length >= 200:
 
         genomic_start = min(exon[0] for exon in info["exons"])
@@ -90,8 +90,7 @@ for transcript_id, info in transcripts.items():
         }
 
 #we will now find transcripts that are defined as lncRNAs by FEELnc
-#we will make use of a set as each transcript may occur many times in the gtf for each of its exons but we only want the transcript id 
-
+#we will use a set as each transcript may occur many times in the gtf for each of its exons but we only want the transcript id 
 feelnc = set()
 
 with open(FEELNC_GTF) as infile:
@@ -110,7 +109,7 @@ with open(FEELNC_GTF) as infile:
             #we would like to add the id to the feelnc non-coding set
             feelnc.add(transcript_id)
 
-#this section of the script looks into identify the transcripts that were predicted by CPC2 as non-coding
+#this section of the script looks to identify the transcripts that were predicted by cpc2 as non-coding
 #we are storing the non-coding classified transcripts into another set
 
 cpc2 = set()
@@ -119,7 +118,7 @@ with open(CPC2_FILE) as infile:
 
     for line in infile:
 
-        if line.startswith("#"):
+        if line.startswith("#"): #ignore headers or comment lines
             continue
 
         fields = line.rstrip().split("\t")
@@ -129,7 +128,7 @@ with open(CPC2_FILE) as infile:
             continue
 
         transcript_id = fields[0]
-        #the cpc2 results has lowercase for coding/non-coding
+        #the cpc2 results has lowercase for coding status 
         classification = fields[7].strip().lower()
 
         #retain only the non-coding transcripts
@@ -137,22 +136,19 @@ with open(CPC2_FILE) as infile:
             cpc2.add(transcript_id)
 
 #this step will identify the candidate novel lncRNAs in species
-#the criteria for selection are:
-# 1. found from novel intergenic transcript "u" set
-# 2. has a spliced length of >= 200nt
-# 3. feelnc classified as lncRNA
-# 4. classified as noncoding by CPC2
-
-#making use of "&" finds the intersecion between the 3 sets 
+#the criteria for selection are: found from novel intergenic transcript "u" set, spliced length of >= 200nt, feelnc classified as lncRNA
+#and classified as noncoding by CPC2
+#"&" finds the intersecion between the sets
 
 final_transcripts = ( set(long_transcripts) & feelnc & cpc2)
 
 #this section is to compile a table of the final lncRNA candidates from cpc2, feelnc and the 200 nt filtering step
-#remember length is the sum of the exons so it doesn't inlcude introns
+#remember length is the sum of the exons so it doesn't inlcude introns!!!
+#also remember that these candidates are all >200nt as classified as non-coding by BOTH tools indep.
 
 with open(newlnc_cpc2_feelnc_final, "w") as outfile:
 
-    #writing column headings
+    #writing out the column headings
     outfile.write(
         "Chromosome\t"
         "Start\t"
@@ -163,7 +159,7 @@ with open(newlnc_cpc2_feelnc_final, "w") as outfile:
         "Length\n"
     )
 
-    #information about the final candidate transcripts
+    #to store information about the final candidate transcripts in the output file
     for transcript_id in sorted(final_transcripts):
 
         info = long_transcripts[transcript_id]
@@ -175,21 +171,15 @@ with open(newlnc_cpc2_feelnc_final, "w") as outfile:
             f"{info['strand']}\t"
             f"{info['gene_id']}\t"
             f"{transcript_id}\t"
-            f"{info['length']}\n"
-        )
+            f"{info['length']}\n")
 
 #priniting the numbers of lncRNAs retained or stored at each stage
-print("Gorilla novel lncRNA analysis")
-print("Original novel intergenic transcripts:", len(transcripts))
-
-print("Novel intergenic transcripts >= 200 nt:", len(long_transcripts))
-
-print("transcripts defined as lncRNAs by FEELnc:", len(feelnc))
-
-print("transcripts classified as non-coding by CPC2:", len(cpc2))
-
-print("final transcripts non-coding in both and >= 200nt:", len(final_transcripts))
-
-print("final output written to:" , newlnc_cpc2_feelnc_final)
+print("novel lncRNA analysis for Gorilla")
+print("novel intergenic transcripts orig", len(transcripts))
+print("nov. intergen transcrip >= 200 nt:", len(long_transcripts))
+print("transcripts defined as lncRNAs by FEELnc", len(feelnc))
+print("non-coding classified transcripts by cpc2", len(cpc2))
+print("final transcripts >= 200nt and non-coding in both", len(final_transcripts))
+print("final output " , newlnc_cpc2_feelnc_final)
 
 
