@@ -1,4 +1,4 @@
-#this script has been written to find the PCG blocks coords previosuly extracted and convert them into BED format
+#this script has been written to find the PCG blocks coords previously extracted and converts them into BED format
 input_file = "outputfinalchimpensstep1"
 output_file = "Chimp_PCG_Blocks.bed"
 
