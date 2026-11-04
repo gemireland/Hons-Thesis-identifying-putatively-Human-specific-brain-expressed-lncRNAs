@@ -8,9 +8,9 @@
 
 #import csv so that python can read and write tab-delimited files
 import csv
-#imort sys so filenames can be supplied into the terminal
+#import sys so filenames can be supplied into the terminal
 import sys
-#import math so that -log10(E-vlaue) can be calculated
+#import math so that -log10(E-vlaue) can be calculated (explained below)
 import math
 #defaultdict automatically creates nested dictionaries when a new query or subject gene is encountered
 from collections import defaultdict
