@@ -129,7 +129,7 @@ with open(output_bed, "w") as outfile:
             f"0\t"                           
             f"{block_count}\t"               
             f"{','.join(block_sizes)}\t"    
-            f"{','.join(block_starts)}\n"     # exon relative start positions
+            f"{','.join(block_starts)}\n"     
         )
 
 print(f"BED written to {output_bed}")
