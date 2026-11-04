@@ -2,10 +2,10 @@
 
 import pandas as pd
 
-#path to gene-level dGTEx expression file
+#this is the dGTEx expression file 
 expression_file = "dGTEx_Analysis_2025-07-21_v1_RNASeqV2.4.3_gene_tpm.gct"
 
-#our 4 brain samples identified from the dGTEx sample metadata
+#our 4 brain samples identified from the dGTEx sample metadata (removing all the other non-brain tissues)
 brain_samples = [
     "DGTEX001-2BZ-01-SM-OLAQB",
     "DGTEX002-2BZ-01-SM-OLMRP",
