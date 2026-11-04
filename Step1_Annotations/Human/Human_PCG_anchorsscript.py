@@ -1,3 +1,4 @@
+#this script has been written to find the PCG blocks coords previously extracted and converts them into BED format
 input_file = "outputhumangencodestep1.txt"
 output_file = "Human_PCG_Blocks.bed"
 
@@ -10,7 +11,7 @@ for line in f:
 
     line = line.strip()
 
-    if line.startswith("Total pcgs isoforms"):
+    if line.startswith("total pcgs isoforms"):
         in_pcg_section = True
         continue
 
@@ -38,5 +39,5 @@ for line in f:
 f.close()
 w.close()
 
-print("Finished making Human_PCG_Blocks.bed")
+print("Human_PCG_Blocks.bed made")
 
