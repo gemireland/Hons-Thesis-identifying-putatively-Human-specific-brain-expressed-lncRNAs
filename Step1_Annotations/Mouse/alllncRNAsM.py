@@ -20,13 +20,11 @@ LNCRNA_BIOTYPES = {
     "lncRNA",
     "lincRNA",
     "antisense",
-    "misc_RNA",
     "sense_intronic",
     "sense_overlapping",
     "3prime_overlapping_ncrna",
     "bidirectional_promoter_lncRNA",
     "non-coding",
-    "miRNA",
 }
 
 #We need to convert the 9th column in the GTF file into a dictionary so we can easily access the attributes of each transcript. 
