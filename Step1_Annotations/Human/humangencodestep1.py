@@ -1,5 +1,5 @@
 #humangencodestep1.py
-
+#this script was written in very basic code, I refined it in later scripts 
 #to read the gtf file into a pandas DataFrame
 f = open('gencode.v49.annotation.gtf', 'r')
 humanlines = f.readlines()
