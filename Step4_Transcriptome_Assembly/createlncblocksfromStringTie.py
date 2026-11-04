@@ -70,8 +70,6 @@ with open(output_file, "w") as outfile:
         )
 
 print("lncRNA transcript candidates", sum(info["transcript_count"] for info in gene_blocks.values()))
-
 print("no. lncRNA gene blocks", len(gene_blocks))
-
 print("created output file", output_file)
                         
