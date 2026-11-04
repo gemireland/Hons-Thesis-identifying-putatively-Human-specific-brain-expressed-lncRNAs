@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-#this scripts is being written to take the updated chimp and gorilla conserved lncRNA files (from the synteny analysis on the novel lncRNAs from newly assemled transcriptomes)
+#this scripts is being written to take the updated expanded chimp and gorilla conserved lncRNA files (from the synteny analysis on the novel lncRNAs from newly assemled transcriptomes)
 #we are also looking at the original conserved mouse lncRNAs as these were not reanalysed as there was a decent number of conserved annotated human lncRNAs to mouse
 
 import pandas as pd
-#to start these are my input files
+#to start these are my input files that I will be comparing
 
 human_brain_expressed = pd.read_csv("Human_brain_expressed_lncRNA_catalogue.tsv", sep="\t")
 updated_chimp_conserved = pd.read_csv("UpdatedConserved_Chimp_lncRNAs.tsv", sep="\t")
@@ -43,7 +43,7 @@ human_brain_expressed["Conservation_category"] = human_brain_expressed.apply(cla
 #creating a file where all conservation statuses are kept for human
 human_brain_expressed.to_csv("Human_brain_lncRNAs_all_conservation.tsv", sep="\t", index=False)
 
-#save each category independetly
+#save each category independently
 mammalian_conserved = human_brain_expressed[human_brain_expressed["Conservation_category"] == "Mammalian-conserved"]
 primate_conserved = human_brain_expressed[human_brain_expressed["Conservation_category"] == "Primate-conserved"]
 human_brain_specific = human_brain_expressed[human_brain_expressed["Conservation_category"] == "Putatively human brain specific"]
@@ -54,7 +54,7 @@ human_brain_expressed.to_csv("Human_brain_putatively_human_specific.tsv", sep="\
 
 #printing the results to our terminal
 #quick check to see the 18 859 human brain expressed lncs
-print("Total human brain expressed lncs:", len(human_brain_expressed))
+print("total hum brain expressed lncs:expecting 18 859", len(human_brain_expressed))
 
 print("Conserved hum brain in chimp:", human_brain_expressed["Chimp_conserved"].sum())
 print("Conserved hum brain in gorilla:", human_brain_expressed["Gorilla_conserved"].sum())
