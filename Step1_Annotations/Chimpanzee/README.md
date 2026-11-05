@@ -4,7 +4,7 @@ This folder has the Python3 scripts used to process Chimpanzee's reference genom
 
 The scripts:
 
-1. finalchimpensstep1.py: Extracts the annotated Gorilla lncRNAs and PCGs from Chimpanzee's reference GTF file and groups transcript isoforms into gene-level genomic blocks. Identifies neighbouring upstream and downstream PCGs.
+1. finalchimpensstep1.py: Extracts the annotated Chimpanzee lncRNAs and PCGs from Chimpanzee's reference GTF file and groups transcript isoforms into gene-level genomic blocks. Identifies neighbouring upstream and downstream PCGs.
 
 2. finalchimp_PCG_anchors.py: Extracts PCG anchor information from the output of finalchimpensstep1.py and generates Chimpanzee PCG genomic blocks in BED format
 
