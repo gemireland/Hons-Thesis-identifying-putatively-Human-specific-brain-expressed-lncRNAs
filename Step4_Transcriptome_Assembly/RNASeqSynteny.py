@@ -1,4 +1,4 @@
-#Script to process WGA SenNet.Maf
+#Script to process WGA SenNet.Maf fro chimp (for reassessmnet of synetny on expanded lnc catalogue)
 synfile = "hg38.panTro5.synNet.maf"
 species = 'panTro5'
 f = open(synfile,'r')
