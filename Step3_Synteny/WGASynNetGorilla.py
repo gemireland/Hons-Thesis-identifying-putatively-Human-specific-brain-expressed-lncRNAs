@@ -1,4 +1,4 @@
-#Script to process WGA SynNet.Maf for gorilla
+#Script to process WGA SynNet.Maf for gorilla (run on initial lnc catalogue before expansion)
 synfile = "hg38.gorGor4.synNet.maf"
 species = 'gorGor4'
 f = open(synfile,'r')
