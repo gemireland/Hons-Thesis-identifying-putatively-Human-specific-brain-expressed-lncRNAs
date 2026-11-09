@@ -1,6 +1,6 @@
 Python3 scripts for using BLASTN (v2.17.0) analysis to identify conserved PCGs 
 
-This folder has the Python3 (and SHELL?????) scripts used to identify conserved protein-coding genes (PCGs) anchors between Human and Mouse, Chimpanzee and Gorilla using BLASTN (v2.17.0). These results were incorporated into the synteny-based conservation analysis.
+This folder has the Python3 and Shell scripts used to identify conserved protein-coding genes (PCGs) anchors between Human and Mouse, Chimpanzee and Gorilla using BLASTN (v2.17.0). These results were incorporated into the synteny-based conservation analysis.
 
 The scripts:
 
