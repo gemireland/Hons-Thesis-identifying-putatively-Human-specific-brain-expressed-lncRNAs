@@ -1,4 +1,4 @@
-#Script to process WGA SenNet.Maf
+#Script to process WGA SynNet.Maf for chimp
 synfile = "hg38.panTro5.synNet.maf"
 species = 'panTro5'
 f = open(synfile,'r')
@@ -105,7 +105,7 @@ for row in reader:
     chimp_pcg_name = row["sseqid"].split("::")[0].strip()
 
 
-    #HUMAN REGION that looks the same format as the human_lines in the WGA synteny
+    #human region that looks the same format as the human_lines in the WGA synteny
 
     hregion =""
     hchr =""
@@ -142,7 +142,7 @@ for row in reader:
 
         rlength = hend - hstart 
 
-    #SPECIES REGION that looks the same format as the species_lines in the WGA synteny
+    #species region that looks the same format as the species_lines in the WGA synteny
 
     sregion =""
     schr =""
@@ -184,7 +184,7 @@ for row in reader:
         #print(hregion,sregion)
         continue    
 
-    #EXACT SAME STRUCTURE AS THE WGA 
+    #exact same str 
     try:
         blastRegions[hchr][(hstart,hend)].append(
             [hstrand,schr,sstart,send,sstrand, human_pcg_name, chimp_pcg_name]
@@ -214,7 +214,7 @@ for chrm in blastRegions:
 
 print(countmulti)
 
-output_file = "Human_Chimp_BLAST_Aligned_Regions.tsv"              #is this writing the correct thing?? or do I need to move it elsewhere?
+output_file = "Human_Chimp_BLAST_Aligned_Regions.tsv"              
 
 with open(output_file, "w", newline="") as outfile:
 
@@ -259,7 +259,7 @@ with open(output_file, "w", newline="") as outfile:
 
 print("Output saved to:", output_file)
 
-#####READING IN THe chimp AND HUMAN lncRNA BLCOKS
+#####reading in the chimp and human lncRNA blocks
 
 human_lncRNA_file = "Human_lncRNA_blocks.tsv"
 chimp_lncRNA_file = "Chimp_lncRNA_blocks.tsv"
@@ -316,7 +316,7 @@ def read_lncRNA_blocks(filename):
         lncRNAs[chromosome].sort(
             key = lambda lncRNA: lncRNA["start"]
         )
-      # print lncRNAs[chromosome]
+      #print lncRNAs[chromosome]
 
     return lncRNAs
 
@@ -326,7 +326,7 @@ chimpLncRNAs = read_lncRNA_blocks(chimp_lncRNA_file)
 #I AM CREATING A COMBINED DICTIONARY FOR THE BLAST AND THE WGA ALIGNED REGIONS
 totalAlignedRegions = {}
 
-#### alignedRegions.keys will return all of the chr values as these are keys in the dictionary
+####alignedRegions.keys will return all of the chr values as these are keys in the dictionary
 all_chromosomes = set(alignedRegions.keys()) | set(blastRegions.keys())
 
 for chromosome in all_chromosomes:
@@ -435,9 +435,9 @@ def relative_position(
     region_start,
     region_end
 ):
-    """
+    
     ######this will describe the position of a region relative to a lncRNA.
-    """
+ 
 
     if region_end < lnc_start:
         return "UPSTREAM"
@@ -477,11 +477,11 @@ def transcription_relative_to_anchor(
     #conserved region overlaps the lncRNA
     return "OVERLAPS"
 
-# This list will contain one result dictionary for every lncRNA
+#this list will contain one result dictionary for every lncRNA
 lncRNA_neighbour_results = []
 
 conservedlncrnas = {}
-# Process every chromosome containing human lncRNAs
+#to process every chromosome containing human lncRNAs
 for chromosome in humanLncRNAs:
 
     chromosome_lncRNAs = humanLncRNAs[chromosome]
@@ -493,10 +493,10 @@ for chromosome in humanLncRNAs:
     )
 
     
-    #### WE ARE GETTING THE ALIGNED REGIONS
+    ####WE ARE GETTING THE ALIGNED REGIONS
 
 
-    #These are used to find the closest downstream region
+    #these are used to find the closest downstream region
     regions_sorted_by_start = sorted(
         chromosome_regions,
         key=lambda region: region["human_start"]
@@ -507,7 +507,7 @@ for chromosome in humanLncRNAs:
         for region in regions_sorted_by_start
     ]
 
-    #These are used to find the closest upstream region
+    #these are used to find the closest upstream region
     regions_sorted_by_end = sorted(
         chromosome_regions,
         key=lambda region: region["human_end"]
@@ -518,7 +518,7 @@ for chromosome in humanLncRNAs:
         for region in regions_sorted_by_end
     ]
 
-    # Keep only BLAST records because these represent PCGs
+    #we keep only BLAST records because these represent PCGs
     chromosome_pcg_regions = [
         region
         for region in chromosome_regions
@@ -526,7 +526,7 @@ for chromosome in humanLncRNAs:
     ]
 
     
-    # PROCESS EVERY lncRNA ON THIS CHROMOSOME
+    #to process every lnc of this chromosome
     
 
     for lncRNA in chromosome_lncRNAs:
@@ -535,8 +535,7 @@ for chromosome in humanLncRNAs:
         lnc_end = lncRNA["end"]
 
         
-        # FIND THE CLOSEST BLAST PCG
-        
+        #finding closest BLAST PCG
 
         closest_pcg = None
         closest_pcg_distance = None
@@ -565,12 +564,12 @@ for chromosome in humanLncRNAs:
                     pcg_region["human_end"]
                 )
 
-                # Distance 0 is the smallest possible distance
+                #0 is the smallest possible distance
                 if pcg_distance == 0:
                     break
 
         
-        # FIND THE CLOSEST UPSTREAM ALIGNED REGION
+        #find closest upstream alignmnet
         
 
         closest_upstream_region = None
@@ -593,7 +592,7 @@ for chromosome in humanLncRNAs:
                 - closest_upstream_region["human_end"]
             )
 
-        #  FIND THE CLOSEST DOWNSTREAM ALIGNED REGION
+        #find closest downstream alignmnet
         
 
         closest_downstream_region = None
@@ -617,7 +616,7 @@ for chromosome in humanLncRNAs:
             )
 
        
-        # 4. CREATE THE OUTPUT RECORD
+        #making our output
     
 
         result = {
@@ -628,7 +627,7 @@ for chromosome in humanLncRNAs:
             "lncRNA_end": lnc_end,
             "lncRNA_strand": lncRNA["strand"],
 
-            # Closest PCG fields
+            #fields for closest PCG
             "closest_PCG_human_name": "",
             "closest_PCG_start": "",
             "closest_PCG_end": "",
@@ -641,7 +640,7 @@ for chromosome in humanLncRNAs:
             "closest_PCG_chimp_end": "",
             "closest_PCG_chimp_strand": "",
 
-            # Upstream aligned-region fields
+            #fields for closest NUA
             "upstream_region_start": "",
             "upstream_region_end": "",
             "upstream_region_human_strand": "",
@@ -652,7 +651,7 @@ for chromosome in humanLncRNAs:
             "upstream_region_chimp_end": "",
             "upstream_region_chimp_strand": "",
 
-            # Downstream aligned-region fields
+            #fields for NDA
             "downstream_region_start": "",
             "downstream_region_end": "",
             "downstream_region_human_strand": "",
@@ -676,7 +675,7 @@ for chromosome in humanLncRNAs:
         }
 
         
-        # ADD THE CLOSEST PCG INFORMATION
+        #cloests PCG info
 
         if closest_pcg is not None:
 
@@ -727,7 +726,7 @@ for chromosome in humanLncRNAs:
             ]
 
         
-        # ADD THE UPSTREAM REGION INFORMATION
+        #upstream region info
 
         if closest_upstream_region is not None:
 
@@ -768,7 +767,7 @@ for chromosome in humanLncRNAs:
             )
 
        
-        # ADD THE DOWNSTREAM REGION INFORMATION
+        #downstream region info
        
 
         if closest_downstream_region is not None:
@@ -874,11 +873,11 @@ for chromosome in humanLncRNAs:
                         f'{candidate["strand"]}|'
                     )
                     for candidate in conserved_chimp_lncRNA
-                )''' #this is not neccessary for the final script but interesting to see how it works 
-                
+                )''' #this is not neccessary for the final script but was run initially
+            
         #I need to save the result 
         if len(conserved_chimp_lncRNA) !=0:
-            #select the closest lncRNA 
+            #select the closest lncRNA (this is an example of how)
             #------            hlnc1.---------
             #------- mlnc1.     mlnc2----------    #I would say the the mlnc2 is the closest and conserved one to the hlnc1 as it is in the same position relative to the nda in the human 
 
@@ -888,7 +887,7 @@ for chromosome in humanLncRNAs:
             selected_chimp_distance = None
             selected_orientation_conserved = False
         
-            # FIND WHICH CONSERVED FEATURE IS CLOSEST TO THE HUMAN lncRNA
+            #find which conserved feature closest 
 
             anchor_distances = {}
 
@@ -915,13 +914,12 @@ for chromosome in humanLncRNAs:
                 key=anchor_distances.get
             )
      
-            # FIND THE chimp lncRNA CLOSEST TO THAT SAME CONSERVED FEATURE
+            #find chimp lnc closest to the same conserved feature
             
             for chimp_lncRNA in conserved_chimp_lncRNA:
 
-                # --------------------------------------------
-                # CASE 1: closest conserved feature is the PCG
-                # --------------------------------------------
+                #1st case if closest conserved feature is the PCG
+               
                 if closest_anchor == "PCG":
 
                     anchor_start = result["closest_PCG_chimp_start"]
@@ -934,13 +932,13 @@ for chromosome in humanLncRNAs:
                         anchor_end
                     )
 
-                    # Human lncRNA relative to human PCG
+                    #human lncRNA relative to human PCG
                     human_same_orientation = (
                         lncRNA["strand"]
                         == result["closest_PCG_strand"]
                     )
 
-                    # chimp lncRNA relative to chimp PCG
+                    #chimp lncRNA relative to chimp PCG
                     chimp_same_orientation = (
                         chimp_lncRNA["strand"]
                         == result["closest_PCG_chimp_strand"]
@@ -951,13 +949,13 @@ for chromosome in humanLncRNAs:
                     == chimp_same_orientation
                     )
 
-                    # If human lncRNA overlaps the PCG,
-                    # chimp lncRNA must also overlap its mapped PCG.
+                    #human lncRNA overlaps the PCG,
+                    #chimp lncRNA must also overlap its mapped PCG.
                     if closest_pcg_distance == 0 and chimp_distance != 0:
                         orientation_conserved = False
 
                
-                # CASE 2: closest conserved feature is the NUA
+                #2nd case if closest conserved feature is the NUA
                 elif closest_anchor == "NUA":
 
                     anchor_start = nua_start
@@ -970,8 +968,8 @@ for chromosome in humanLncRNAs:
                         anchor_end
                     )
                                                                                     
-                    # Is the human lncRNA transcribing toward or
-                        # away from its human NUA?
+                    #human lncRNA transcribing toward or
+                        #away from its human NUA?
                     human_relationship = transcription_relative_to_anchor(
                         lncRNA["start"],
                         lncRNA["end"],
@@ -979,8 +977,8 @@ for chromosome in humanLncRNAs:
                         result["upstream_region_start"],                            result["upstream_region_end"]
                     )
 
-                    # Is this chimp lncRNA transcribing toward or
-                    # away from the corresponding chimp NUA?
+                    #chimp lncRNA transcribing toward or
+                    #away from the corresponding chimp NUA?
                     chimp_relationship = transcription_relative_to_anchor(
                         chimp_lncRNA["start"],
                         chimp_lncRNA["end"],
@@ -994,10 +992,8 @@ for chromosome in humanLncRNAs:
                         == chimp_relationship
                     )
 
-
-                # --------------------------------------------
-                # CASE 3: closest conserved feature is the NDA
-                # --------------------------------------------
+                #3rd case if closest conserved feature is the NDA
+               
                 else:
 
                     anchor_start = nda_start
@@ -1010,7 +1006,7 @@ for chromosome in humanLncRNAs:
                         anchor_end
                     )
 
-                # Human lncRNA relative to human NDA
+                #hum lncRNA relative to human NDA
                     human_relationship = transcription_relative_to_anchor(
                         lncRNA["start"],
                         lncRNA["end"],
@@ -1019,7 +1015,7 @@ for chromosome in humanLncRNAs:
                         result["downstream_region_end"]
                     )
 
-                    # chimp lncRNA relative to mapped chimp NDA
+                    #chimp lncRNA relative to mapped chimp NDA
                     chimp_relationship = transcription_relative_to_anchor(
                         chimp_lncRNA["start"],
                         chimp_lncRNA["end"],
@@ -1033,24 +1029,24 @@ for chromosome in humanLncRNAs:
                         == chimp_relationship
                     )
 
-                # SELECT THE BEST chimp lncRNA
+                #choosing best chimp lnc
             
 
-                # first candidate
+                #first candidate
                 if selected_chimp_distance is None:
                     selected_chimp_distance = chimp_distance
                     selected_chimp_lncRNA = chimp_lncRNA
                     selected_orientation_conserved = orientation_conserved
 
-                # orientation-conserved candidate beats a
-                # non-orientation-conserved candidate
+                #an example where orientation-conserved candidate beats a
+                #non-orientation-conserved candidate
                 elif orientation_conserved and not selected_orientation_conserved:
                     selected_chimp_distance = chimp_distance
                     selected_chimp_lncRNA = chimp_lncRNA
                     selected_orientation_conserved = True
 
-                # if both have the same orientation status,
-                # choose whichever is closer
+                #if both have the same orientation status,
+                #choose whichever is closer
                 elif (
                     orientation_conserved == selected_orientation_conserved
                     and chimp_distance < selected_chimp_distance
@@ -1063,7 +1059,7 @@ for chromosome in humanLncRNAs:
             if selected_chimp_lncRNA is not None:
             
 
-                # always save the best selected chimp lncRNA candidate in the main result table
+                #always save the best selected chimp lncRNA candidate in the main result table
                 result["selected_chimp_lncRNA_name"] = (
                     selected_chimp_lncRNA["name"]
                 )
@@ -1142,7 +1138,7 @@ with open(output_file, "w", newline="") as outfile:
             record["distance"]
         ])
 
-print("Saved conserved lncRNAs to:", output_file)
+print("saved conserved lncRNAs", output_file)
 
 output_file = "Human_Chimp_lncRNA_Synteny_Results.tsv"
 
@@ -1211,8 +1207,8 @@ with open(output_file, "w", newline="") as outfile:
     for result in lncRNA_neighbour_results:
         writer.writerow(result)
 
-print("\nNeighbour results saved to:", output_file)
+print("\nneighbour results saved", output_file)
 print(
-    "Number of human lncRNAs written:",
+    "no. of human lncRNAs",
     len(lncRNA_neighbour_results)
 )
