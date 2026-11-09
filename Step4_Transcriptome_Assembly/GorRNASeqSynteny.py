@@ -1,4 +1,4 @@
-#Script to process WGA SenNet.Maf
+#Script to process WGA SynNet.Maf for gorilla (for reassessmnet of synteny on expanded lnc catalogue)
 synfile = "hg38.gorGor4.synNet.maf"
 species = 'gorGor4'
 f = open(synfile,'r')
@@ -142,7 +142,7 @@ for row in reader:
 
         rlength = hend - hstart 
 
-    #species that looks the same format as the species_lines in the WGA synteny
+    #species region that looks the same format as the species_lines in the WGA synteny
 
     sregion =""
     schr =""
@@ -257,7 +257,7 @@ with open(output_file, "w", newline="") as outfile:
                     sstrand
                 ])
 
-print("Output saved to:", output_file)
+print("output saved", output_file)
 
 #####reading in the gorilla and human lncRNA blocks we created
 
@@ -388,7 +388,7 @@ for chromosome in all_chromosomes:
     )
 
 #####SANITY CHECK 
-print("\nCombined aligned regions:")
+print("\ncombined aligned regions")
 selectedChrm = ['chr1','chr2','chr3','chr4','chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY']
 for chromosome in sorted(totalAlignedRegions):
     if chromosome in selectedChrm:
@@ -491,7 +491,7 @@ for chromosome in humanLncRNAs:
     )
 
     
-    #### WE ARE GETTING THE ALIGNED REGIONS!!!
+    ####WE ARE GETTING THE ALIGNED REGIONS!!!
 
 
     #these are used to find the closest downstream region
@@ -524,7 +524,7 @@ for chromosome in humanLncRNAs:
     ]
 
     
-    #we want to process every lncRNA on every chromosome
+    #we want to process every lncRNA on chromosome
     
 
     for lncRNA in chromosome_lncRNAs:
@@ -626,7 +626,7 @@ for chromosome in humanLncRNAs:
             "lncRNA_end": lnc_end,
             "lncRNA_strand": lncRNA["strand"],
 
-            # Closest PCG fields
+            #fields of closest PCG
             "closest_PCG_human_name": "",
             "closest_PCG_start": "",
             "closest_PCG_end": "",
@@ -639,7 +639,7 @@ for chromosome in humanLncRNAs:
             "closest_PCG_gorilla_end": "",
             "closest_PCG_gorilla_strand": "",
 
-            # Upstream aligned-region fields
+            #fields of NUA
             "upstream_region_start": "",
             "upstream_region_end": "",
             "upstream_region_human_strand": "",
@@ -650,7 +650,7 @@ for chromosome in humanLncRNAs:
             "upstream_region_gorilla_end": "",
             "upstream_region_gorilla_strand": "",
 
-            # Downstream aligned-region fields
+            #fields of NDA
             "downstream_region_start": "",
             "downstream_region_end": "",
             "downstream_region_human_strand": "",
@@ -871,11 +871,11 @@ for chromosome in humanLncRNAs:
                         f'{candidate["strand"]}|'
                     )
                     for candidate in conserved_gorilla_lncRNA
-                )''' #this is not neccessary for the final script but interesting to see how it works 
+                )''' #this is not neccessary for the final script but was run initially 
                 
         #I need to save the result 
         if len(conserved_gorilla_lncRNA) !=0:
-            #select the closest lncRNA 
+            #select the closest lncRNA (an example of how)
             #------            humanlnc1 ---------
             #------- mmouselnc1    mouselnc2----------    #I would say the the mouselnc2 is the closest and conserved one to the humanlnc1 as it is in the same position relative to the nda in the human 
 
@@ -889,8 +889,8 @@ for chromosome in humanLncRNAs:
 
             anchor_distances = {}
 
-            #this condition means thar you only let teh PCG compete for being teh conserevd anchor is the blast mapped PCG for gorilla is on the same chromosome as the WGA interval
-            #if teh PCG is on a different chromosome to teh GWA the script ignores it for anchro selectiona and uses teh NUA or the NDA
+            #this condition means thar you only let the PCG compete for being the conserevd anchor if the blast mapped PCG for gorilla is on the same chromosome as the WGA interval
+            #if the PCG is on a different chromosome to teh GWA the script ignores it for anchro selectiona and uses teh NUA or the NDA
             if (
                 closest_pcg_distance is not None
                 and result["closest_PCG_gorilla_chromosome"] != ""
@@ -912,11 +912,11 @@ for chromosome in humanLncRNAs:
                 key=anchor_distances.get
             )
      
-            #fining the gorilla lncRNA closest to the same conserved feature
+            #finding the gorilla lncRNA closest to the same conserved feature
             
             for gorilla_lncRNA in conserved_gorilla_lncRNA:
 
-                #CASE 1: if closest conserved feature is the PCG
+                #1st case if closest conserved feature is the PCG
             
                 if closest_anchor == "PCG":
 
@@ -953,7 +953,7 @@ for chromosome in humanLncRNAs:
                         orientation_conserved = False
 
                
-                #CASE 2: if closest conserved feature is the NUA
+                #2nd case if closest conserved feature is the NUA
                 elif closest_anchor == "NUA":
 
                     anchor_start = nua_start
@@ -992,7 +992,7 @@ for chromosome in humanLncRNAs:
 
 
          
-                #CASE 3: if closest conserved feature is the NDA
+                #3rd case if closest conserved feature is the NDA
                 
                 else:
 
@@ -1138,7 +1138,7 @@ with open(output_file, "w", newline="") as outfile:
             record["distance"]
         ])
 
-print("Saved conserved lncRNAs to:", output_file)
+print("saved conserved lncRNAs", output_file)
 
 output_file = "StringTieHuman_Gorilla_lncRNA_Synteny_Results.tsv"
 
@@ -1207,8 +1207,8 @@ with open(output_file, "w", newline="") as outfile:
     for result in lncRNA_neighbour_results:
         writer.writerow(result)
 
-print("\nNeighbour results saved to:", output_file)
+print("\nneighbour results saved", output_file)
 print(
-    "Number of human lncRNAs written:",
+    "no. of human lncRNAs",
     len(lncRNA_neighbour_results)
 )
